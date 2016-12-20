@@ -113,19 +113,18 @@ $ pip3 install pyparsing
 ## Example 1: Parse a C assignment statement
 
 ```python
->>> from pyparsing import Word, Literal, alphas, alphanums, nums
->>>
->>> type = Literal("float")|Literal("double")|Literal("long double")
->>> identifier=Word(alphas, alphanums+'_')
->>> assignment=Literal("=")
->>> number=Word(nums+".")
->>> eos=Literal(";")
->>> cstatement=type + identifier + assignment \
+from pyparsing import Word, Literal, alphas, alphanums, nums, oneOf
+type = oneOf(["float", "double", "long double"])
+identifier=Word(alphas, alphanums+'_')
+assignment=Literal("=")
+number=Word(nums+".")
+eos=Literal(";")
+cstatement=type + identifier + assignment \
 ... + (number|identifier) + eos
->>> cstatement.parseString('double x = 7;')
-(['double', 'x', '=', '7', ';'], {})
->>> cstatement.parseString('double y = x;')
-(['double', 'y', '=', 'x', ';'], {})
+cstatement.parseString('double x = 7;')
+# (['double', 'x', '=', '7', ';'], {})
+cstatement.parseString('double y = x;')
+# (['double', 'y', '=', 'x', ';'], {})
 ```
 
 ---
@@ -208,13 +207,14 @@ char* c = "He said \"hello friend!\"";
 
 The lexemes are
 
-```c
-char*
-c
-=
-"He said \"hello friend!\""
-;
-```
+1. `char*`
+
+1. `c`
+
+1. `=`
+
+1. `"He said \"hello friend!\"";`
+
 
 ---
 
@@ -273,12 +273,12 @@ This can be achieved via parse actions, which are simply callbacks.
 ## pyparsing: Defining parse actions
 
 ```python
->>> number = Word(nums+".").setParseAction(lambda t:float(t[0]))
+number = Word(nums+".").setParseAction(lambda t:float(t[0]))
 ...
->>> cstatement=reserved + identifier + assignment + number + eos
->>> keyword, id, rhs = cstatement.parseString("double pi = 3.14;")
->>> rhs
-3.14
+cstatement=reserved + identifier + assignment + number + eos
+keyword, id, rhs = cstatement.parseString("double pi = 3.14;")
+print(rhs)
+# 3.14
 ```
 
 
@@ -289,7 +289,7 @@ This can be achieved via parse actions, which are simply callbacks.
 If `double x = 3.14;` parses, then
 
 ```c
-double x = 3.14; random syntactically incorrect garbage
+double x = 3.14; &\;random&\;syntactically&\;incorrect&\;garbage
 ```
 
 will also parse.
@@ -309,12 +309,21 @@ parse_result = (cstatement + stringEnd).parseString("double x = 3.14; random gar
 
 ---
 
-# How to write a parser
+# How to write a forgiving parser: Advice
 
 1. Get a big pile of test data
-1. Remove all the comments
-1. Drop everything you can quickly identify as irrelevant to your cause
-1. Get ready to pull out your hair.
+1. Pass 1: Remove all the comments, strip all whitespace from line end/beginning
+1. Pass 2: Group data, don't parse it, (e.g., group in `<head>` and `<body>` before a full parse)
+1. Pass 3: Parse groups individually.
+
+
+---
+
+# How to write a forgiving parser: Advice
+
+1. Attempt to parse each group multiple ways (e.g., `parseString(line)` and `line.split()`)
+1. Pass a logger to your parser, if you can't parse, log, don't fail
+1. Most data you parse is irrelevant; don't get hung up on special cases unless you actually need them
 
 ---
 
