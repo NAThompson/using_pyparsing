@@ -4,9 +4,9 @@ from pyparsing import Word, Literal, alphas, alphanums, nums, ParseException
 from pyparsing import Suppress, QuotedString, oneOf, stringEnd
 
 # A subset of the C primitive types:
-type = Literal("float")|Literal("double")|Literal("int")|Literal("unsigned")
+tyype = Literal("float")|Literal("double")|Literal("int")|Literal("unsigned")
 # We could also write this as:
-type = oneOf(["float", "double", "int", "unsigned"])
+tyype = oneOf(["float", "double", "int", "unsigned"])
 
 # Rules for identifiers in C
 identifier=Word(alphas, alphanums+'_')
@@ -21,7 +21,7 @@ number=Word(nums+".")
 eos=Literal(";")
 
 # A C assignment statement is a type, identifier, '=', number or identifier, and then a semicolon.
-c_assignment=type + identifier + assignment + (number|identifier) + eos
+c_assignment=tyype + identifier + assignment + (number|identifier) + eos
 
 # Note that this could be parsed with str.split() and then some further manipulations.
 parse_result = c_assignment.parseString('double x = 7;')
@@ -64,7 +64,7 @@ except ParseException as e:
 
 
 # Explicitly tokenize the lexemes by use of 'setResultsName'!
-c_assignment = type.setResultsName("type") + identifier.setResultsName("new_identifier") + assignment
+c_assignment = tyype.setResultsName("type") + identifier.setResultsName("new_identifier") + assignment
 c_assignment += (number|identifier).setResultsName("rhs") + eos
 parse_result = c_assignment.parseString("double x = 7;")
 # Will print 'double'
@@ -81,7 +81,7 @@ print(parse_result.rhs)
 
 assignment = Suppress(Literal("="))
 eos = Suppress(Literal(";"))
-cstatement=type + identifier + assignment + (number|identifier) + eos
+cstatement=tyype + identifier + assignment + (number|identifier) + eos
 t, id, rhs = cstatement.parseString("double x = 7;")
 
 # Will print 'double'
@@ -120,7 +120,7 @@ Defining parse actions (passing callbacks to the parser)
 
 # The parse action is to convert the number to a float when it is found.
 number = Word(nums+'.').setParseAction(lambda t:float(t[0]))
-cstatement= type + identifier + assignment + (number|identifier) + eos
+cstatement= tyype + identifier + assignment + (number|identifier) + eos
 t, id, rhs = cstatement.parseString("double x = 3.14;")
 
 # Will print 3.14 and 6.28:
@@ -135,10 +135,10 @@ via dump(), items(), keys().
 '''
 
 
-type = oneOf(["float", "double", "int", "unsigned"]).setResultsName("type")
+tyype = oneOf(["float", "double", "int", "unsigned"]).setResultsName("type")
 identifier=Word(alphas, alphanums+'_').setResultsName("identifier")
 number = Word(nums+'.').setParseAction(lambda t:float(t[0])).setResultsName("number")
-cstatement= type + identifier + assignment + (number|identifier) + eos
+cstatement= tyype + identifier + assignment + (number|identifier) + eos
 parse_result = cstatement.parseString("double x = 3.14;")
 
 
